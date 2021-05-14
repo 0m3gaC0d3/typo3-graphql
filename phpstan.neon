@@ -1,0 +1,9 @@
+parameters:
+  level: max
+  reportUnmatchedIgnoredErrors: false
+  paths:
+    - %currentWorkingDirectory%/Classes
+  ignoreErrors:
+    - '#Call to an undefined method [a-zA-Z0-9\\_]+Repository::find(.*)\(\)#'
+    - '#Property(.*)iterable(.*)ObjectStorage#'
+  checkMissingIterableValueType: false

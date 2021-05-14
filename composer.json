@@ -1,0 +1,79 @@
+{
+  "name": "wpu/t3-extension-graphql",
+  "description": "This extension enables you to quickly implement a graphql api TYPO3 extension.",
+  "type": "typo3-cms-extension",
+  "license": "GPL-3.0-or-later",
+  "authors": [
+    {
+      "name": "Wolf Utz",
+      "email": "wpu@hotmail.de"
+    }
+  ],
+  "require": {
+    "php": "^7.2",
+    "ext-json": "*",
+    "typo3/cms-core": "^10.4",
+    "webonyx/graphql-php": "^v14.6",
+    "lcobucci/jwt": "^3.4",
+    "cakephp/chronos": "^2.1",
+    "ramsey/uuid": "^4.1"
+  },
+  "require-dev": {
+    "nimut/testing-framework": "^5.1",
+    "squizlabs/php_codesniffer": "^3.5",
+    "friendsofphp/php-cs-fixer": "^2.16",
+    "phpstan/phpstan": "0.12.*",
+    "phpmd/phpmd": "^2.9",
+    "helmich/typo3-typoscript-lint": "^2.3",
+    "vimeo/psalm": "^4.3",
+    "kint-php/kint": "^3.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "Wpu\\Graphql\\": "Classes"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Wpu\\Graphql\\Tests\\": "Tests"
+    }
+  },
+  "config": {
+    "vendor-dir": ".Build/vendor",
+    "bin-dir": ".Build/bin",
+    "platform": {
+      "php": "7.2"
+    }
+  },
+  "extra": {
+    "typo3/cms": {
+      "extension-key": "wpu_graphql",
+      "cms-package-dir": "{$vendor-dir}/typo3/cms",
+      "web-dir": ".Build/Web"
+    }
+  },
+  "scripts": {
+    "post-autoload-dump": [
+      "mkdir -p .Build/Web/typo3conf/ext/",
+      "[ -L .Build/Web/typo3conf/ext/wpu_graphql ] || ln -snvf ../../../../. .Build/Web/typo3conf/ext/wpu_graphql"
+    ],
+    "build": [
+      "./.ci/scripts/console.sh -s build -p 7.2"
+    ],
+    "quality": [
+      "./.ci/scripts/console.sh -s quality -p 7.2"
+    ],
+    "lint": [
+      "./.ci/scripts/console.sh -s lint -p 7.2"
+    ],
+    "unit": [
+      "./.ci/scripts/console.sh -s unit -p 7.2"
+    ],
+    "functional": [
+      "./.ci/scripts/console.sh -s functional -p 7.2"
+    ],
+    "fix": [
+      "./.ci/scripts/console.sh -s fix -p 7.2"
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  Wpu\Graphql\:
+    resource: '../Classes/*'
+
+  Wpu\Graphql\Auth\Jwt\JwtAuthInterface:
+    class: Wpu\Graphql\Auth\Jwt\HmacJwtAuth
+    arguments:
+      $issuer: 'localhost'
+      $lifetime: 86400
+      $key: 'my-secret-123'
+
+  Wpu\Graphql\Action\GraphqlAction:
+    arguments:
+      $authProvider: '@Wpu\Graphql\Provider\JwtAuthProvider'

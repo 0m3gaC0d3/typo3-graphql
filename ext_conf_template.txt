@@ -1,0 +1,2 @@
+# cat=api/1; type=string; label=Graphql JWT HMAC secret
+hmacSecret = my-secret-123

@@ -1,0 +1,122 @@
+version: '2.3'
+services:
+  #======================================================
+  # DB
+  #======================================================
+  mariadb10:
+    image: mariadb:10
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: funcp
+    tmpfs:
+      - /var/lib/mysql/:rw,noexec,nosuid
+  #======================================================
+  # Build
+  #======================================================
+  build:
+    image: composer:2.0
+    volumes:
+      - ${ROOT_DIR}:${ROOT_DIR}
+    working_dir: ${ROOT_DIR}
+    command: >
+      /bin/sh -c "
+          composer install;
+      "
+  #======================================================
+  # Lint
+  #======================================================
+  lint:
+    image: typo3gmbh/php72:latest
+    volumes:
+      - ${ROOT_DIR}:${ROOT_DIR}
+    working_dir: ${ROOT_DIR}
+    command: >
+      /bin/sh -c "
+          echo \"Lint php...\";
+          php -v | grep '^PHP';
+          find . -name \\*.php ! -path "./.Build/\\*" -print0 | xargs -0 -n1 -P4 php -n -c /etc/php/cli-no-xdebug/php.ini -l >/dev/null
+          echo \"Lint Typoscript...\";
+          .Build/bin/typoscript-lint Configuration/TypoScript/
+          echo \"Lint for debug calls...\";
+          if grep -rnw "Resources/Private/" "Classes/" -e "debug" -e "DebuggerUtility"; then
+            exit 1
+          fi
+      "
+  #======================================================
+  # Quality
+  #======================================================
+  quality:
+    image: php:${PHP_VERSION}-alpine
+    volumes:
+      - ${ROOT_DIR}:${ROOT_DIR}
+    working_dir: ${ROOT_DIR}
+    command: >
+      /bin/sh -c "
+          echo \"===============================================\";
+          echo \"Running phpcs...\";
+          .Build/bin/phpcs --error-severity=1 --warning-severity=8 --extensions=php Classes;
+          echo \"===============================================\";
+          echo \"Running php-cs-fixer...\";
+          .Build/bin/php-cs-fixer fix --allow-risky=yes --dry-run --diff
+          echo \"===============================================\";
+          echo \"Running phpmd...\";
+          .Build/bin/phpmd Classes text phpmd.xml;
+          echo \"===============================================\";
+          echo \"Running phpstan...\";
+          php -d memory_limit=4G .Build/bin/phpstan analyse -c phpstan.neon
+          echo \"===============================================\";
+          echo \"Running psalm...\";
+          .Build/bin/psalm --show-info=true
+      "
+  #======================================================
+  # Fix
+  #======================================================
+  fix:
+    image: riconet/typo3:9.5
+    volumes:
+      - ${ROOT_DIR}:${ROOT_DIR}
+    working_dir: ${ROOT_DIR}
+    command: >
+      /bin/sh -c "
+          echo \"Fix quality errors...\";
+          .Build/bin/php-cs-fixer fix --allow-risky=yes
+          .Build/bin/phpcbf --error-severity=1 --warning-severity=8 --extensions=php
+      "
+  #======================================================
+  # Functional tests
+  #======================================================
+  functional:
+    image: riconet/typo3:9.5
+    links:
+      - mariadb10
+    volumes:
+      - ${ROOT_DIR}:${ROOT_DIR}
+    environment:
+      typo3DatabaseName: func_test
+      typo3DatabaseUsername: root
+      typo3DatabasePassword: funcp
+      typo3DatabaseHost: mariadb10
+    working_dir: ${ROOT_DIR}/.Build
+    command: >
+      /bin/sh -c "
+          echo Waiting for database start...;
+          while ! nc -z mariadb10 3306; do
+              sleep 1;
+          done;
+          echo Database is up;
+          bin/phpunit -c vendor/nimut/testing-framework/res/Configuration/FunctionalTests.xml ${EXTRA_TEST_OPTIONS} ../Tests/Functional;
+          rm -rf Web/typo3temp/var/tests/func*
+      "
+  #======================================================
+  # Unit tests
+  #======================================================
+  unit:
+    image: riconet/typo3:9.5
+    volumes:
+      - ${ROOT_DIR}:${ROOT_DIR}
+    working_dir: ${ROOT_DIR}/.Build
+    command: >
+      /bin/sh -c "
+          php bin/phpunit -c vendor/nimut/testing-framework/res/Configuration/UnitTests.xml ${EXTRA_TEST_OPTIONS} ../Tests/Unit;
+      "
