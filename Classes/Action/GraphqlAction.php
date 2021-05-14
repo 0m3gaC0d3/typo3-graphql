@@ -1,7 +1,7 @@
 <?php
 
 /**
- * This file is part of the "wpu_graphql" Extension for TYPO3 CMS.
+ * This file is part of the "typo3-graphql" Extension for TYPO3 CMS.
  *
  * For the full copyright and license information, please read the
  * LICENSE.txt file that was distributed with this source code.
@@ -13,53 +13,44 @@ declare(strict_types=1);
 
 namespace Wpu\Graphql\Action;
 
-use GraphQL\Error\DebugFlag;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-
-
-use ErrorException;
 use Exception;
 use GraphQL\Error\FormattedError;
 use GraphQL\Server\ServerConfig;
 use GraphQL\Server\StandardServer;
-use Psr\Container\ContainerInterface;
-use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
-use Symfony\Component\EventDispatcher\EventDispatcher;
+use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use Wpu\Graphql\Provider\AuthProviderInterface;
+use Wpu\Graphql\Handler\RequestAuthHandlerInterface;
+use Wpu\Graphql\Provider\DebugFlagProviderInterface;
 use Wpu\Graphql\Provider\SchemaProviderInterface;
 
 class GraphqlAction implements ActionInterface
 {
     /**
-     * @var AuthProviderInterface
+     * @var RequestAuthHandlerInterface
      */
-    private $authProvider;
+    private $requestAuthHandler;
 
-    public function __construct(AuthProviderInterface $authProvider)
+    /**
+     * @var DebugFlagProviderInterface
+     */
+    private $debugFlagProvider;
+
+    public function __construct(RequestAuthHandlerInterface $requestAuthHandler, DebugFlagProviderInterface $debugFlagProvider)
     {
-        $this->authProvider = $authProvider;
+        $this->requestAuthHandler = $requestAuthHandler;
+        $this->debugFlagProvider = $debugFlagProvider;
     }
-
 
     public function process(ServerRequestInterface $request, ResponseInterface $response, array $configuration = []): ResponseInterface
     {
-        $request = $this->authProvider->handleRequest($request);
-        set_error_handler(function ($severity, $message, $file, $line) {
-            throw new ErrorException($message, 0, $severity, $file, $line);
-        });
-
-
-
-//        $debug = DebugUtility::getDebugFlagByEnv();
-        $debug = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
+        $debug = $this->debugFlagProvider->getDebugFlag();
 //        $graphQLSyncPromiseAdapter = new SyncPromiseAdapter();
 //        $promiseAdapter = new WebonyxGraphQLSyncPromiseAdapter($graphQLSyncPromiseAdapter);
 //        $this->dispatchDataLoaderEvent($promiseAdapter);
         try {
+            $request = $this->requestAuthHandler->handleRequest($request);
 //            (new RequestValidator())->validate($request, (array) $request->getParsedBody());
             /** @var SchemaProviderInterface $schemaProvider */
             $schemaProvider = GeneralUtility::makeInstance($configuration['schemaProvider']);
@@ -72,7 +63,7 @@ class GraphqlAction implements ActionInterface
                     return FormattedError::createFromException($error, $debug);
                 })
                 ->setQueryBatching(true);
-                //->setPromiseAdapter($graphQLSyncPromiseAdapter);
+            //->setPromiseAdapter($graphQLSyncPromiseAdapter);
 
             // Create server.
             $server = new StandardServer($config);
@@ -82,12 +73,11 @@ class GraphqlAction implements ActionInterface
 
             return $response->withStatus($response->getStatusCode())->withHeader('Content-Type', 'application/json');
         } catch (Exception $exception) {
-            $httpStatus = 500;
             $response->getBody()->write((string) json_encode([
-                'errors' => FormattedError::createFromException($exception, $debug)
+                'errors' => FormattedError::createFromException($exception, $debug),
             ]));
 
-            return $response->withStatus($httpStatus)->withHeader('Content-type', 'application/json');
+            return $response->withStatus(200)->withHeader('Content-type', 'application/json');
         }
 
 //

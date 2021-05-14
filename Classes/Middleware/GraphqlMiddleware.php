@@ -1,7 +1,7 @@
 <?php
 
 /**
- * This file is part of the "wpu_graphql" Extension for TYPO3 CMS.
+ * This file is part of the "typo3-graphql" Extension for TYPO3 CMS.
  *
  * For the full copyright and license information, please read the
  * LICENSE.txt file that was distributed with this source code.
@@ -18,10 +18,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TYPO3\CMS\Core\Http\ResponseFactory;
-use TYPO3\CMS\Core\SysLog\Action\Login;
+use TYPO3\CMS\Extbase\Object\Container\Container;
 use Wpu\Graphql\Action\ActionInterface;
-use Wpu\Graphql\Action\GraphqlAction;
-use Wpu\Graphql\Action\LoginAction;
 
 class GraphqlMiddleware implements MiddlewareInterface
 {
@@ -31,20 +29,14 @@ class GraphqlMiddleware implements MiddlewareInterface
     private $responseFactory;
 
     /**
-     * @var GraphqlAction
+     * @var Container
      */
-    private $action;
+    private $container;
 
-    /**
-     * @var LoginAction
-     */
-    private $loginAction;
-
-    public function __construct(ResponseFactory $responseFactory, GraphqlAction $action, LoginAction $loginAction)
+    public function __construct(ResponseFactory $responseFactory, Container $container)
     {
         $this->responseFactory = $responseFactory;
-        $this->action = $action;
-        $this->loginAction = $loginAction;
+        $this->container = $container;
     }
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
@@ -56,34 +48,43 @@ class GraphqlMiddleware implements MiddlewareInterface
             return $handler->handle($request);
         }
 
-
-        // @todo move and fix me
-        if ($request->getUri()->getPath() === '/graphql/auth') {
-            $response = $this->responseFactory->createResponse();
-            $request = $request->withParsedBody(json_decode($request->getBody()->getContents(), true));
-
-            return $this->loginAction->process($request, $response);
-        }
-
-
         // Check current request against configured apis.
         $targetApiIdentifier = null;
         foreach ($apis as $identifier => $api) {
-            if ($api['endpoint'] !== $request->getUri()->getPath()) {
-                continue;
+            // Check, if the current requests is a configured login endpoint.
+            if ($api['loginEndpoint'] === $request->getUri()->getPath()) {
+                $action = $this->getAction($api['loginAction']);
+
+                $response = $this->responseFactory->createResponse();
+                $request = $request->withParsedBody(json_decode($request->getBody()->getContents(), true));
+
+                return $action->process($request, $response, $api);
             }
-            $targetApiIdentifier = $identifier;
-            break;
+
+            // Check, if the current requests is a configured graphql endpoint.
+            if ($api['graphqlEndpoint'] === $request->getUri()->getPath()) {
+                $action = $this->getAction($api['graphqlAction']);
+
+                $response = $this->responseFactory->createResponse();
+                $request = $request->withParsedBody(json_decode($request->getBody()->getContents(), true));
+
+                return $action->process($request, $response, $api);
+            }
         }
 
-        if (is_null($targetApiIdentifier)) {
-            // No configured api endpoint matches requested url path.
-            return $handler->handle($request);
+        // Could not find a configured api matching the current request.
+        return $handler->handle($request);
+    }
+
+    private function getAction(string $actionClass): ActionInterface
+    {
+        /** @var ActionInterface $action */
+        $action = $this->container->getInstance($actionClass);
+
+        if (!$action instanceof ActionInterface) {
+            throw new \InvalidArgumentException("Class \"$actionClass\" must implement \"" . ActionInterface::class . '".');
         }
 
-        $response = $this->responseFactory->createResponse();
-        $request = $request->withParsedBody(json_decode($request->getBody()->getContents(), true));
-
-        return $this->action->process($request, $response, $apis[$targetApiIdentifier]);
+        return $action;
     }
 }

@@ -1,13 +1,23 @@
 <?php
 
+/**
+ * This file is part of the "typo3-graphql" Extension for TYPO3 CMS.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE.txt file that was distributed with this source code.
+ *
+ * (c) 2021 Wolf Utz <wpu@hotmail.de>
+ */
 
-namespace Wpu\Graphql\Provider;
+declare(strict_types=1);
 
+namespace Wpu\Graphql\Handler;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Wpu\Graphql\Auth\Jwt\JwtAuthInterface;
+use Wpu\Graphql\Exception\HttpUnauthorizedException;
 
-class JwtAuthProvider implements AuthProviderInterface
+class JwtRequestAuthHandler implements RequestAuthHandlerInterface
 {
     /**
      * @var JwtAuthInterface
@@ -21,10 +31,10 @@ class JwtAuthProvider implements AuthProviderInterface
 
     public function handleRequest(ServerRequestInterface $request): ServerRequestInterface
     {
-        $authorization = explode(' ', (string)$request->getHeaderLine('Authorization'));
+        $authorization = explode(' ', (string) $request->getHeaderLine('Authorization'));
         $token = $authorization[1] ?? '';
         if (!$token || !$this->jsonWebTokenAuth->validateToken($token)) {
-            throw new \Exception("Not authorized", 401);
+            throw new HttpUnauthorizedException('Not authorized', 401);
         }
         $parsedToken = $this->jsonWebTokenAuth->createParsedToken($token);
         $request = $request->withAttribute('token', $parsedToken);

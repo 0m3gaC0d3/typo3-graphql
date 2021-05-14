@@ -15,5 +15,9 @@ services:
       $key: 'my-secret-123'
 
   Wpu\Graphql\Action\GraphqlAction:
+    public: true
     arguments:
-      $authProvider: '@Wpu\Graphql\Provider\JwtAuthProvider'
+      $requestAuthHandler: '@Wpu\Graphql\Handler\JwtRequestAuthHandler'
+
+  Wpu\Graphql\Action\LoginAction:
+    public: true

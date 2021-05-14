@@ -11,11 +11,11 @@
 
 declare(strict_types=1);
 
-namespace Wpu\Graphql\Provider;
+namespace Wpu\Graphql\Handler;
 
-use GraphQL\Type\Schema;
+use Psr\Http\Message\ServerRequestInterface;
 
-interface SchemaProviderInterface
+interface RequestAuthHandlerInterface
 {
-    public function createSchema(): Schema;
+    public function handleRequest(ServerRequestInterface $request): ServerRequestInterface;
 }

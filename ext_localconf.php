@@ -7,7 +7,10 @@ defined('TYPO3_MODE') || exit();
     \Wpu\Graphql\Utility\GraphqlApiManager::register(
         'api-2',
         '/graphql',
-        \Wpu\Graphql\Provider\SchemaProvider::class
+        '/graphql/login',
+        \Wpu\Graphql\Provider\SchemaProvider::class,
+        \Wpu\Graphql\Action\GraphqlAction::class,
+        \Wpu\Graphql\Action\LoginAction::class
     );
 
 })('wpu_graphql');

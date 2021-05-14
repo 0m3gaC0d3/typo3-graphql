@@ -13,9 +13,7 @@ declare(strict_types=1);
 
 namespace Wpu\Graphql\Provider;
 
-use GraphQL\Type\Schema;
-
-interface SchemaProviderInterface
+interface DebugFlagProviderInterface
 {
-    public function createSchema(): Schema;
+    public function getDebugFlag(): int;
 }

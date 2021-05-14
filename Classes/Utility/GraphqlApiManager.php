@@ -1,7 +1,7 @@
 <?php
 
 /**
- * This file is part of the "wpu_graphql" Extension for TYPO3 CMS.
+ * This file is part of the "typo3-graphql" Extension for TYPO3 CMS.
  *
  * For the full copyright and license information, please read the
  * LICENSE.txt file that was distributed with this source code.
@@ -19,15 +19,19 @@ class GraphqlApiManager
 {
     public static function register(
         string $identifier,
-        string $endpoint,
+        string $graphqlEndpoint,
+        string $loginEndpoint,
         string $schemaProvider,
-        string $action = GraphqlAction::class
+        string $graphqlAction = GraphqlAction::class,
+        string $loginAction = GraphqlAction::class
     ): void {
         $api = [
             'identifier' => $identifier,
-            'endpoint' => $endpoint,
+            'graphqlEndpoint' => $graphqlEndpoint,
+            'loginEndpoint' => $loginEndpoint,
             'schemaProvider' => $schemaProvider,
-            'action' => $action,
+            'graphqlAction' => $graphqlAction,
+            'loginAction' => $loginAction,
         ];
         $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase']['extensions']['WpuGraphql']['apis'][$identifier] = $api;
     }
