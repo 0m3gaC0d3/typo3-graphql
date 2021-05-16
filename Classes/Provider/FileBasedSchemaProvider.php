@@ -23,7 +23,7 @@ use InvalidArgumentException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use TYPO3\CMS\Core\Core\ApplicationContext;
 use TYPO3\CMS\Core\Core\Environment;
-use Wpu\Graphql\Event\CollectionResolversEvent;
+use Wpu\Graphql\Event\CollectResolversEvent;
 use Wpu\Graphql\Registry\ResolverRegistry;
 
 class FileBasedSchemaProvider implements SchemaProviderInterface
@@ -66,7 +66,7 @@ class FileBasedSchemaProvider implements SchemaProviderInterface
         }
 
         // Collect resolvers.
-        $this->eventDispatcher->dispatch(new CollectionResolversEvent($this->resolverRegistry));
+        $this->eventDispatcher->dispatch(new CollectResolversEvent($this->resolverRegistry));
 
         /** @var DocumentNode $source */
         $source = $this->getSchemaSource($configuration['options']['schemaFilePath']);

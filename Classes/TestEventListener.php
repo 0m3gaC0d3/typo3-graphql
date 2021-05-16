@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Wpu\Graphql;
 
-use Wpu\Graphql\Event\CollectionResolversEvent;
+use Wpu\Graphql\Event\CollectResolversEvent;
 use Wpu\Graphql\Resolver\QueryResolver;
 
 class TestEventListener
@@ -28,7 +28,7 @@ class TestEventListener
         $this->queryResolver = $queryResolver;
     }
 
-    public function __invoke(CollectionResolversEvent $event): void
+    public function __invoke(CollectResolversEvent $event): void
     {
         $event->getResolverRegistry()->add($this->queryResolver, $this->queryResolver->getType());
     }

@@ -16,7 +16,7 @@ namespace Wpu\Graphql\Event;
 use Symfony\Contracts\EventDispatcher\Event;
 use Wpu\Graphql\Registry\ResolverRegistry;
 
-class CollectionResolversEvent extends Event
+class CollectResolversEvent extends Event
 {
     /**
      * @var ResolverRegistry

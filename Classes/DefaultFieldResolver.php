@@ -19,7 +19,7 @@ use ReflectionClass;
 use ReflectionMethod;
 
 /**
- * This class is a slightly modified of the original `ecodev/graphql-doctrine`.
+ * This class is a slightly modified version of the original (`ecodev/graphql-doctrine`).
  *
  * @see https://github.com/Ecodev/graphql-doctrine/blob/master/src/DefaultFieldResolver.php
  */
