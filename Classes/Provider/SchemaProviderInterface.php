@@ -17,5 +17,5 @@ use GraphQL\Type\Schema;
 
 interface SchemaProviderInterface
 {
-    public function createSchema(): Schema;
+    public function createSchema(array $configuration): Schema;
 }

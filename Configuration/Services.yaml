@@ -6,6 +6,7 @@ services:
 
   Wpu\Graphql\:
     resource: '../Classes/*'
+    exclude: '../Classes/{Exception,DefaultFieldResolver.php}'
 
   Wpu\Graphql\Auth\Jwt\JwtAuthInterface:
     class: Wpu\Graphql\Auth\Jwt\HmacJwtAuth
@@ -21,3 +22,9 @@ services:
 
   Wpu\Graphql\Action\LoginAction:
     public: true
+
+  Wpu\Graphql\TestEventListener:
+    tags:
+      - name: event.listener
+        identifier: 'testListener'
+        event: Wpu\Graphql\Event\CollectionResolversEvent

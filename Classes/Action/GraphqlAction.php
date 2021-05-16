@@ -15,12 +15,14 @@ namespace Wpu\Graphql\Action;
 
 use Exception;
 use GraphQL\Error\FormattedError;
+use GraphQL\GraphQL;
 use GraphQL\Server\ServerConfig;
 use GraphQL\Server\StandardServer;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Object\Container\Container;
+use Wpu\Graphql\DefaultFieldResolver;
 use Wpu\Graphql\Handler\RequestAuthHandlerInterface;
 use Wpu\Graphql\Provider\DebugFlagProviderInterface;
 use Wpu\Graphql\Provider\SchemaProviderInterface;
@@ -37,10 +39,19 @@ class GraphqlAction implements ActionInterface
      */
     private $debugFlagProvider;
 
-    public function __construct(RequestAuthHandlerInterface $requestAuthHandler, DebugFlagProviderInterface $debugFlagProvider)
-    {
+    /**
+     * @var Container
+     */
+    private $container;
+
+    public function __construct(
+        RequestAuthHandlerInterface $requestAuthHandler,
+        DebugFlagProviderInterface $debugFlagProvider,
+        Container $container
+    ) {
         $this->requestAuthHandler = $requestAuthHandler;
         $this->debugFlagProvider = $debugFlagProvider;
+        $this->container = $container;
     }
 
     public function process(ServerRequestInterface $request, ResponseInterface $response, array $configuration = []): ResponseInterface
@@ -48,13 +59,12 @@ class GraphqlAction implements ActionInterface
         $debug = $this->debugFlagProvider->getDebugFlag();
 //        $graphQLSyncPromiseAdapter = new SyncPromiseAdapter();
 //        $promiseAdapter = new WebonyxGraphQLSyncPromiseAdapter($graphQLSyncPromiseAdapter);
-//        $this->dispatchDataLoaderEvent($promiseAdapter);
         try {
             $request = $this->requestAuthHandler->handleRequest($request);
-//            (new RequestValidator())->validate($request, (array) $request->getParsedBody());
+            GraphQL::setDefaultFieldResolver(new DefaultFieldResolver());
             /** @var SchemaProviderInterface $schemaProvider */
-            $schemaProvider = GeneralUtility::makeInstance($configuration['schemaProvider']);
-            $schema = $schemaProvider->createSchema();
+            $schemaProvider = $this->container->getInstance($configuration['schemaProvider']);
+            $schema = $schemaProvider->createSchema($configuration);
 //            $context = $this->buildContext($request);
             $config = ServerConfig::create()
                 ->setSchema($schema)
@@ -69,7 +79,6 @@ class GraphqlAction implements ActionInterface
             $server = new StandardServer($config);
             /** @var Response $response */
             $response = $server->processPsrRequest($request, $response, $response->getBody());
-//            $response = $this->dispatchGraphQLResponseCreatedEvent($response);
 
             return $response->withStatus($response->getStatusCode())->withHeader('Content-Type', 'application/json');
         } catch (Exception $exception) {
@@ -79,9 +88,5 @@ class GraphqlAction implements ActionInterface
 
             return $response->withStatus(200)->withHeader('Content-type', 'application/json');
         }
-
-//
-//        $response->getBody()->write('lol');
-//        return $response;
     }
 }

@@ -16,22 +16,66 @@ namespace Wpu\Graphql\Provider;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Domain\Model\Category;
+use TYPO3\CMS\Extbase\Domain\Repository\CategoryRepository;
+use TYPO3\CMS\Extbase\Persistence\Generic\Typo3QuerySettings;
 
 class SchemaProvider implements SchemaProviderInterface
 {
-    public function createSchema(): Schema
+    /**
+     * @var CategoryRepository
+     */
+    private $categoryRepository;
+
+    public function __construct(CategoryRepository $categoryRepository)
     {
+        $this->categoryRepository = $categoryRepository;
+    }
+
+    public function createSchema(array $configuration): Schema
+    {
+        $categoryType = new ObjectType([
+            'name' => 'Category',
+            'fields' => [
+                'uid' => Type::int(),
+                'title' => Type::string(),
+            ],
+        ]);
+
         $queryType = new ObjectType([
             'name' => 'Query',
             'fields' => [
-                'echo' => [
-                    'type' => Type::string(),
+                'category' => [
+                    'type' => $categoryType,
                     'args' => [
-                        'message' => Type::nonNull(Type::string()),
+                        'uid' => Type::nonNull(Type::id()),
                     ],
                     'resolve' => function ($rootValue, $args) {
-//                        return ['prefix'] . $args['message'];
-                        return 'lol? ' . $args['message'];
+                        /** @var Category|null $category */
+                        $category = $this->categoryRepository->findByUid((int) $args['uid']);
+                        if (is_null($category)) {
+                            return null;
+                        }
+
+                        return $category;
+                    },
+                ],
+                'categories' => [
+                    'type' => Type::listOf($categoryType),
+                    'resolve' => function () {
+                        /** @var Typo3QuerySettings $settings */
+                        $settings = GeneralUtility::makeInstance(Typo3QuerySettings::class);
+                        $settings->setRespectStoragePage(false);
+                        $this->categoryRepository->setDefaultQuerySettings($settings);
+
+                        /** @var Category[] $categories */
+                        $categories = $this->categoryRepository->findAll();
+
+//                        if (is_null($category)) {
+//                            return null;
+//                        }
+                        return $categories;
                     },
                 ],
             ],

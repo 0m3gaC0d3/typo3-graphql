@@ -18,21 +18,25 @@ use Wpu\Graphql\Action\GraphqlAction;
 class GraphqlApiManager
 {
     public static function register(
+        string $extensionKey,
         string $identifier,
         string $graphqlEndpoint,
         string $loginEndpoint,
         string $schemaProvider,
         string $graphqlAction = GraphqlAction::class,
-        string $loginAction = GraphqlAction::class
+        string $loginAction = GraphqlAction::class,
+        array $options = []
     ): void {
         $api = [
+            'extensionKey' => $extensionKey,
             'identifier' => $identifier,
             'graphqlEndpoint' => $graphqlEndpoint,
             'loginEndpoint' => $loginEndpoint,
             'schemaProvider' => $schemaProvider,
             'graphqlAction' => $graphqlAction,
             'loginAction' => $loginAction,
+            'options' => $options,
         ];
-        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase']['extensions']['WpuGraphql']['apis'][$identifier] = $api;
+        $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['extbase']['extensions']['WpuGraphql']['apis']["$extensionKey-$identifier"] = $api;
     }
 }

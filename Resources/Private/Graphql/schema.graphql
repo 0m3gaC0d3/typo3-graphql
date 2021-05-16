@@ -1,0 +1,16 @@
+schema {
+    query: Query
+}
+
+type Query {
+    # Gets a category by uid.
+    category(uid: Int!): Category
+    # Gets all categories.
+    categories: [Category]!
+}
+
+type Category {
+    uid: Int!
+    title: String!
+    parent: Category
+}
