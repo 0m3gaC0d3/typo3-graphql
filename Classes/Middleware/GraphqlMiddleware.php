@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Wpu\Graphql\Middleware;
 
+use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -49,8 +50,7 @@ class GraphqlMiddleware implements MiddlewareInterface
         }
 
         // Check current request against configured apis.
-        $targetApiIdentifier = null;
-        foreach ($apis as $identifier => $api) {
+        foreach ($apis as $api) {
             // Check, if the current requests is a configured login endpoint.
             if ($api['loginEndpoint'] === $request->getUri()->getPath()) {
                 $action = $this->getAction($api['loginAction']);
@@ -82,7 +82,7 @@ class GraphqlMiddleware implements MiddlewareInterface
         $action = $this->container->getInstance($actionClass);
 
         if (!$action instanceof ActionInterface) {
-            throw new \InvalidArgumentException("Class \"$actionClass\" must implement \"" . ActionInterface::class . '".');
+            throw new InvalidArgumentException("Class \"$actionClass\" must implement \"" . ActionInterface::class . '".');
         }
 
         return $action;

@@ -31,14 +31,13 @@ class JwtRequestAuthHandler implements RequestAuthHandlerInterface
 
     public function handleRequest(ServerRequestInterface $request): ServerRequestInterface
     {
-        $authorization = explode(' ', (string) $request->getHeaderLine('Authorization'));
+        $authorization = explode(' ', $request->getHeaderLine('Authorization'));
         $token = $authorization[1] ?? '';
         if (!$token || !$this->jsonWebTokenAuth->validateToken($token)) {
-            throw new HttpUnauthorizedException('Not authorized', 401);
+            throw new HttpUnauthorizedException('Not authorized');
         }
         $parsedToken = $this->jsonWebTokenAuth->createParsedToken($token);
-        $request = $request->withAttribute('token', $parsedToken);
 
-        return $request;
+        return $request->withAttribute('token', $parsedToken);
     }
 }

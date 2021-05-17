@@ -19,7 +19,7 @@ use Throwable;
 
 class HttpUnauthorizedException extends Exception implements ClientAware
 {
-    public function __construct($message = '', $code = 0, Throwable $previous = null)
+    public function __construct(string $message = '', Throwable $previous = null)
     {
         parent::__construct($message, 401, $previous);
     }

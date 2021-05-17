@@ -105,7 +105,7 @@ class LoginAction implements ActionInterface
 
     private function getAndValidateRequiredArguments(ServerRequestInterface $request): array
     {
-        $arguments = $request->getParsedBody();
+        $arguments = (array) $request->getParsedBody();
 
         // Validate username.
         if (!isset($arguments['username']) || empty($arguments['username'])) {
@@ -140,6 +140,9 @@ class LoginAction implements ActionInterface
     private function checkPassword(string $suppliedPassword, string $storedPassword): bool
     {
         try {
+            if (!defined('TYPO3_MODE')) {
+                define('TYPO3_MODE', 'BE');
+            }
             $hashInstance = $this->passwordHashFactory->get($storedPassword, TYPO3_MODE);
 
             return $hashInstance instanceof PasswordHashInterface &&
