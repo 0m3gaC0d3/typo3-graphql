@@ -22,9 +22,3 @@ services:
 
   Wpu\Graphql\Action\LoginAction:
     public: true
-
-  Wpu\Graphql\TestEventListener:
-    tags:
-      - name: event.listener
-        identifier: 'testListener'
-        event: Wpu\Graphql\Event\CollectionResolversEvent

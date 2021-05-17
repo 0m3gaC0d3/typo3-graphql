@@ -1,7 +1,7 @@
 <?php
 
 /**
- * This file is part of the "typo3-graphql" Extension for TYPO3 CMS.
+ * This file is part of the "wpu_graphql" Extension for TYPO3 CMS.
  *
  * For the full copyright and license information, please read the
  * LICENSE.txt file that was distributed with this source code.
@@ -74,5 +74,10 @@ abstract class AbstractRegistry
     public function clear(): void
     {
         $this->items = [];
+    }
+
+    public function count(): int
+    {
+        return count($this->items);
     }
 }
