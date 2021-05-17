@@ -36,12 +36,6 @@ services:
           echo \"Lint php...\";
           php -v | grep '^PHP';
           find . -name \\*.php ! -path "./.Build/\\*" -print0 | xargs -0 -n1 -P4 php -n -c /etc/php/cli-no-xdebug/php.ini -l >/dev/null
-          echo \"Lint Typoscript...\";
-          .Build/bin/typoscript-lint Configuration/TypoScript/
-          echo \"Lint for debug calls...\";
-          if grep -rnw "Resources/Private/" "Classes/" -e "debug" -e "DebuggerUtility"; then
-            exit 1
-          fi
       "
   #======================================================
   # Quality
@@ -73,7 +67,7 @@ services:
   # Fix
   #======================================================
   fix:
-    image: riconet/typo3:9.5
+    image: php:${PHP_VERSION}-alpine
     volumes:
       - ${ROOT_DIR}:${ROOT_DIR}
     working_dir: ${ROOT_DIR}
@@ -87,7 +81,7 @@ services:
   # Functional tests
   #======================================================
   functional:
-    image: riconet/typo3:9.5
+    image: riconet/typo3:10.4
     links:
       - mariadb10
     volumes:
@@ -112,7 +106,7 @@ services:
   # Unit tests
   #======================================================
   unit:
-    image: riconet/typo3:9.5
+    image: riconet/typo3:10.4
     volumes:
       - ${ROOT_DIR}:${ROOT_DIR}
     working_dir: ${ROOT_DIR}/.Build

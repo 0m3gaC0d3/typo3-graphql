@@ -23,10 +23,6 @@ before_script:
 
 script:
   - >
-    echo "Running linting";
-    .ci/scripts/console.sh -s lint -p $TRAVIS_PHP_VERSION
-
-  - >
     echo "Running code quality tests";
     .ci/scripts/console.sh -s quality -p $TRAVIS_PHP_VERSION
 
