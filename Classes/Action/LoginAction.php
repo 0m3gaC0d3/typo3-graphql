@@ -80,10 +80,20 @@ class LoginAction implements ActionInterface
 
             // Get user, if exists.
             $user = $this->fetchUser($arguments['username']);
+
             // Check password.
             if (!$this->checkPassword($arguments['password'], $user->getPassword())) {
                 throw new HttpUnauthorizedException('Username or password is wrong.');
             }
+
+            // Check required configured user groups.
+            $requiredUserGroupUids = $configuration['options']['requiredUserGroupUids'] ?? null;
+            if (is_array($requiredUserGroupUids) && count($requiredUserGroupUids) > 0) {
+                if (!$this->checkRequiredUserGroups($user, $requiredUserGroupUids)) {
+                    throw new HttpUnauthorizedException('Your are not authorized.');
+                }
+            }
+
             // Send success response with jwt.
             $result = [
                 'access_token' => $this->auth->createJwt([]), //@todo add claim service
@@ -150,5 +160,19 @@ class LoginAction implements ActionInterface
         } catch (Exception $exception) {
             return false;
         }
+    }
+
+    private function checkRequiredUserGroups(FrontendUser $user, array $requiredUserGroupUids): bool
+    {
+        $actualUserGroupUids = array_map(function ($group) {
+            return $group->getUid();
+        }, $user->getUsergroup()->toArray());
+        foreach ($requiredUserGroupUids as $requiredUserGroupUid) {
+            if (!in_array($requiredUserGroupUid, $actualUserGroupUids)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

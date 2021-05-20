@@ -32,6 +32,7 @@ class GraphqlApiManager
             'identifier' => $identifier,
             'graphqlEndpoint' => $graphqlEndpoint,
             'loginEndpoint' => $loginEndpoint,
+
             'schemaProvider' => $schemaProvider,
             'graphqlAction' => $graphqlAction,
             'loginAction' => $loginAction,
